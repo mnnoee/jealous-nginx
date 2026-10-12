@@ -117,9 +117,16 @@ def build_json(data, t_from=None, t_to=None, proto="all"):
     }
 
 
-def write_json_report(data, path="report.json", **kwargs):
-    """Пишет report.json (машиночитаемый отчёт), возвращает путь к файлу."""
+def write_json_report(data, path="report.json", whois_limit=None, **kwargs):
+    """Пишет report.json (машиночитаемый отчёт), возвращает путь к файлу.
+
+    whois_limit: обогатить топ-N сетей /16 и /24 whois-данными
+    (страна, подсеть, abuse); требует whois в PATH.
+    """
     doc = build_json(data, **kwargs)
+    if whois_limit:
+        from .whois import enrich_json
+        enrich_json(doc, whois_limit)
     full = os.path.abspath(path)
     with open(full, "w", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=False, indent=2, default=str)

@@ -113,6 +113,19 @@ def run_batch_whois(nets):
         print()
 
 
+def enrich_json(doc, limit=10):
+    """Обогатить networks_16/24 в JSON-отчёте whois-данными (топ limit сетей).
+
+    Добавляет в каждую запись {"whois": {country, subnet, abuse}}.
+    Требует whois в PATH; результаты кэшируются (см. run_whois_raw).
+    """
+    for key in ("networks_16", "networks_24"):
+        for entry in doc.get(key, [])[:limit]:
+            country, subnet, abuses = whois_abuse(entry["network"])
+            entry["whois"] = {"country": country, "subnet": subnet, "abuse": abuses}
+    return doc
+
+
 def print_top_whois(title, counter, limit, w=None):
     import sys
     top = counter.most_common(limit)

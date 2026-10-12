@@ -160,5 +160,6 @@ def main():
         print_per_minute(data.minutes, args.per_minute)
     if args.json:
         path = json_export.write_json_report(data, args.json,
-                                             t_from=t_from, t_to=t_to, proto=args.proto)
+                                             t_from=t_from, t_to=t_to, proto=args.proto,
+                                             whois_limit=args.whois_cidr)
         print(f'JSON-отчёт записан в: {path}', file=sys.stderr)

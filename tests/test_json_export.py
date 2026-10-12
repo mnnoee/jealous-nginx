@@ -185,5 +185,42 @@ class CliJsonOnGarbageTest(unittest.TestCase):
         self.assertEqual(doc['attacks'], [])
 
 
+class EnrichWhoisTest(unittest.TestCase):
+    def test_enrich_adds_whois_to_top_networks(self):
+        from unittest import mock
+
+        from nginxparse.whois import enrich_json
+        doc = {
+            'networks_16': [
+                {'network': '203.0.0.0', 'count': 5},
+                {'network': '198.51.0.0', 'count': 2},
+            ],
+            'networks_24': [{'network': '203.0.113.0', 'count': 3}],
+        }
+        with mock.patch('nginxparse.whois.whois_abuse',
+                        return_value=('US', '203.0.113.0/24', ['abuse@example.net'])):
+            enrich_json(doc, limit=1)
+        # limit=1: обогащена только первая сеть /16 (и первая /24)
+        self.assertEqual(doc['networks_16'][0]['whois'],
+                         {'country': 'US', 'subnet': '203.0.113.0/24',
+                          'abuse': ['abuse@example.net']})
+        self.assertNotIn('whois', doc['networks_16'][1])
+        self.assertIn('whois', doc['networks_24'][0])
+
+    def test_write_json_report_with_whois_limit(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp:
+            log = _make_log(tmp, [LINE.format(ip='203.0.113.9', time='11:00:00',
+                                              path='/', status=200, size=100)])
+            data = analyze([log])
+            path = os.path.join(tmp, 'report.json')
+            with mock.patch('nginxparse.whois.whois_abuse',
+                            return_value=('DE', '203.0.0.0/8', ['abuse@test.de'])):
+                write_json_report(data, path, whois_limit=5)
+            with open(path, encoding='utf-8') as f:
+                doc = json.load(f)
+        self.assertEqual(doc['networks_16'][0]['whois']['country'], 'DE')
+
+
 if __name__ == "__main__":
     unittest.main()
