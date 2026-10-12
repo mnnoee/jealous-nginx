@@ -6,6 +6,7 @@
 
 import json
 import os
+import sys
 import tempfile
 import unittest
 
@@ -158,6 +159,30 @@ class WriteJsonReportTest(unittest.TestCase):
                 self.assertTrue(os.path.exists(out))
             finally:
                 os.chdir(cwd)
+
+
+class CliJsonOnGarbageTest(unittest.TestCase):
+    def test_json_written_even_when_nothing_parses(self):
+        # error-лог nginx (не access-формат): контракт --json — отчёт пишется
+        # даже когда распарсить нечего (дашборд читает файл всегда)
+        from nginxparse import cli as cli_mod
+        with tempfile.TemporaryDirectory() as tmp:
+            log = os.path.join(tmp, 'error.log')
+            with open(log, 'w', encoding='utf-8') as f:
+                f.write('2026/10/09 01:49:52 [warn] 1993#1993: *1 an upstream response '
+                        'is buffered to a temporary file, client: 203.0.113.9, '
+                        'server: acme.local, request: "GET / HTTP/1.1"\n')
+            out = os.path.join(tmp, 'report.json')
+            argv = sys.argv
+            sys.argv = ['nginx_log_parser.py', log, '--json', out]
+            try:
+                cli_mod.main()
+            finally:
+                sys.argv = argv
+            with open(out, encoding='utf-8') as f:
+                doc = json.load(f)
+        self.assertEqual(doc['meta']['total_requests'], 0)
+        self.assertEqual(doc['attacks'], [])
 
 
 if __name__ == "__main__":

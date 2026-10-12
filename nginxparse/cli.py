@@ -145,6 +145,12 @@ def main():
 
     data = analyze(paths, t_from, t_to, proto=args.proto, skip403=args.skip403)
     if not data.net16:
+        # контракт --json: отчёт пишется даже когда распарсить нечего
+        if args.json:
+            path = json_export.write_json_report(data, args.json,
+                                                 t_from=t_from, t_to=t_to, proto=args.proto)
+            print(f'JSON-отчёт записан в: {path}', file=sys.stderr)
+            return
         print('Нет данных.')
         return
     report(data, whois_limit=args.whois_cidr)
