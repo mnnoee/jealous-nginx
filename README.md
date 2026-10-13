@@ -28,8 +28,10 @@ filtering.
 
 ## Install
 
+Not on PyPI yet (planned). Install straight from GitHub:
+
 ```bash
-pip install jealous-nginx
+pip install git+https://github.com/mnnoee/jealous-nginx.git
 ```
 
 Or run straight from a clone:

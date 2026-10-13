@@ -16,8 +16,10 @@
 
 ## Установка
 
+Пока не на PyPI (публикация планируется). Ставится напрямую с GitHub:
+
 ```bash
-pip install jealous-nginx
+pip install git+https://github.com/mnnoee/jealous-nginx.git
 ```
 
 После установки доступна команда `jealous-nginx`. Можно запускать и без
