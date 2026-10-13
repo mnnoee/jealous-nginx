@@ -98,7 +98,8 @@ def main():
 
     try:
         t_from = parse_dt(args.t_from)
-        t_to = parse_dt(args.t_to)
+        # дата без времени в --to означает конец дня (23:59:59)
+        t_to = parse_dt(args.t_to, is_end=True)
     except ValueError as e:
         print(e)
         return

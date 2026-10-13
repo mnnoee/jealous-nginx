@@ -222,5 +222,27 @@ class EnrichWhoisTest(unittest.TestCase):
         self.assertEqual(doc['networks_16'][0]['whois']['country'], 'DE')
 
 
+class CliTimeFilterTest(unittest.TestCase):
+    def test_to_date_only_means_end_of_day(self):
+        # --to с датой без времени = 23:59:59 (конец дня), а не 00:00:00
+        from nginxparse import cli as cli_mod
+        with tempfile.TemporaryDirectory() as tmp:
+            log = _make_log(tmp, [
+                LINE.format(ip='203.0.113.9', time='10:00:00', path='/', status=200, size=100),
+            ])
+            out = os.path.join(tmp, 'report.json')
+            argv = sys.argv
+            sys.argv = ['nginx_log_parser.py', log,
+                        '--from', '20.08.2026', '--to', '20.08.2026', '--json', out]
+            try:
+                cli_mod.main()
+            finally:
+                sys.argv = argv
+            with open(out, encoding='utf-8') as f:
+                doc = json.load(f)
+        self.assertIn('T00:00:00', doc['meta']['filters']['from'])
+        self.assertIn('T23:59:59', doc['meta']['filters']['to'])
+
+
 if __name__ == "__main__":
     unittest.main()
