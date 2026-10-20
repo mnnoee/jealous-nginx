@@ -77,13 +77,6 @@ def report(data, whois_limit=None, top=None, nets16=True, nets24=True,
            detail_full=False, scanners_full=False):
     top = top or TOP_NETWORKS
     total = data.total
-    shown16 = [n for n in data.net16 if n] if nets16 else []
-    shown24 = [n for n in data.net24 if n] if nets24 else []
-    parts = []
-    if nets16:
-        parts.append('/16')
-    if nets24:
-        parts.append('/24')
     print(f'Всего запросов: {total}, уникальных /16: {len(data.net16)}, /24: {len(data.net24)}')
     top16 = top24 = []
     if whois_limit:
