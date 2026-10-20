@@ -126,9 +126,9 @@ def enrich_json(doc, limit=10):
     return doc
 
 
-def print_top_whois(title, counter, limit, w=None):
+def print_top_whois(title, counter, whois_limit, w=None, top_limit=None):
     import sys
-    top = counter.most_common(limit)
+    top = counter.most_common(top_limit or whois_limit)
     if w is None:
         w = len(str(counter.most_common(1)[0][1])) if counter else 1
     print()
