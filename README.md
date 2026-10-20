@@ -18,9 +18,13 @@ filtering.
 ## Features
 
 - Traffic top by /16 and /24 networks, detailed breakdown per range
-  (top requests, paths, user agents)
-- Scanner and SEO-bot detection, attack classification
+  (default: compact, one line per network; `--full` for the long form).
+  Size of the top is set with `--top N`, masks are chosen with `--16` and `--24`
+- Scanner and SEO-bot detection (compact by default: path count plus 3
+  examples per network; all paths with `--full`), attack classification
   (BRUTE-FORCE, SCAN-SHELLS, XMLRPC-ABUSE, REDIRECT-LOOP)
+- 503 report: hourly chronology, top IPs hit with 503 and their
+  surrounding requests
 - whois enrichment: subnet owners, abuse contacts (cached, batch mode)
 - Time range and IP version filtering, redirects, minute/hour stats
 - Human-readable report + machine-readable JSON export
@@ -45,6 +49,9 @@ python3 nginx_log_parser.py access.log
 ```bash
 jealous-nginx access.log                  # interactive report
 jealous-nginx access.log --from 19.08.2026 --to 20.08.2026
+jealous-nginx access.log --16 --top 5     # only /16, top 5 networks
+jealous-nginx access.log --full           # full breakdown, all scanner paths
+jealous-nginx access.log --report-503     # 503 chronology and affected IPs
 jealous-nginx access.log --whois          # whois enrichment
 jealous-nginx access.log --json out.json  # machine-readable report
 jealous-nginx --help                      # all options
