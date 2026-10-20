@@ -96,6 +96,16 @@ def fmt_request(host, path):
     return f'{host if host else "-"} {path}'
 
 
+def plural(n, one, few, many):
+    """Русское склонение: plural(1, 'запрос', 'запроса', 'запросов') -> 'запрос'."""
+    n = abs(n)
+    if n % 10 == 1 and n % 100 != 11:
+        return one
+    if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14):
+        return few
+    return many
+
+
 def in_range(dt, t_from, t_to):
     if dt is None:
         return True

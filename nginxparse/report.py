@@ -8,7 +8,7 @@ from datetime import timezone
 from .anomalies import print_anomalies
 from .attacks import classify_attacks, print_attack_types
 from .constants import TOP_NETWORKS, TOP_REQUESTS, TOP_UA
-from .parse_utils import expand_files, fmt_request, in_range, iter_lines, parse, parse_ts
+from .parse_utils import expand_files, fmt_request, in_range, iter_lines, parse, parse_ts, plural
 from .scanners import print_scanners
 
 
@@ -16,7 +16,7 @@ def print_top(title, counter, limit=TOP_NETWORKS):
     top = counter.most_common(limit)
     w = len(str(counter.most_common(1)[0][1])) if counter else 1
     print()
-    print(title)
+    print(f'{title} (топ {len(top)}):')
     print('=' * 41)
     for net, cnt in top:
         print(f'{cnt:>{w}} {net}')
@@ -35,51 +35,83 @@ def print_top_ua(counter, limit=10):
         print(f'{i:>2}. {cnt:>{w}} {ua}')
 
 
-def print_detail(net, cnt, req, ua):
+def print_detail(net, cnt, req, ua, compact=True, top_requests=TOP_REQUESTS, top_ua=TOP_UA):
+    if compact:
+        # одна строка на сеть + краткие топы
+        reqs = '; '.join(
+            f'{fmt_request(host, path)} ({c})'
+            for (_, host, path), c in req.most_common(3)) if req else '-'
+        uas = '; '.join(name for name, _ in ua.most_common(2)) if ua else '-'
+        print(f'  {cnt:>6} {net:<16} {reqs}')
+        print(f'{" ":>6} {"":<16} UA: {uas}')
+        return
     print(f'IP: {net}')
     print(f'Кол-во запросов: {cnt}')
     print()
-    print(f'Топ {TOP_REQUESTS} запросов:')
+    print(f'Топ {top_requests} запросов:')
     if req:
         w = len(str(req.most_common(1)[0][1]))
-        for (ip, host, path), c in req.most_common(TOP_REQUESTS):
+        for (ip, host, path), c in req.most_common(top_requests):
             print(f'{c:>{w}} {ip} {fmt_request(host, path)}')
     print()
-    print(f'UserAgent (топ {TOP_UA}):')
-    for j, (name, _) in enumerate(ua.most_common(TOP_UA), 1):
+    print(f'UserAgent (топ {top_ua}):')
+    for j, (name, _) in enumerate(ua.most_common(top_ua), 1):
         print(f'  {j}. {name}')
     print('-' * 41)
 
 
-def print_detail_block(title, top_nets, req_map, ua_map):
+def print_detail_block(title, top_nets, req_map, ua_map, compact=True):
     print()
     print(title)
     print('=' * 41)
     for i, (net, cnt) in enumerate(top_nets, 1):
+        if not compact:
+            print()
+            print(f'--- {i} ---')
+        print_detail(net, cnt, req_map[net], ua_map[net], compact=compact)
+    if compact:
         print()
-        print(f'--- {i} ---')
-        print_detail(net, cnt, req_map[net], ua_map[net])
 
 
-def report(data, whois_limit=None):
+def report(data, whois_limit=None, top=None, nets16=True, nets24=True,
+           detail_full=False, scanners_full=False):
+    top = top or TOP_NETWORKS
     total = data.total
+    shown16 = [n for n in data.net16 if n] if nets16 else []
+    shown24 = [n for n in data.net24 if n] if nets24 else []
+    parts = []
+    if nets16:
+        parts.append('/16')
+    if nets24:
+        parts.append('/24')
     print(f'Всего запросов: {total}, уникальных /16: {len(data.net16)}, /24: {len(data.net24)}')
+    top16 = top24 = []
     if whois_limit:
         from .whois import print_top_whois
         w = max(len(str(data.net16.most_common(1)[0][1])) if data.net16 else 1,
                 len(str(data.net24.most_common(1)[0][1])) if data.net24 else 1)
-        top16 = print_top_whois('Топ IP-адресов по маске /16:', data.net16, whois_limit, w)
-        top24 = print_top_whois('Топ IP-адресов по маске /24:', data.net24, whois_limit, w)
+        if nets16:
+            top16 = print_top_whois('Топ IP-адресов по маске /16:', data.net16, whois_limit, w, top_limit=top)
+        if nets24:
+            top24 = print_top_whois('Топ IP-адресов по маске /24:', data.net24, whois_limit, w, top_limit=top)
     else:
-        top16 = print_top('Топ IP-адресов по маске /16:', data.net16)
-        top24 = print_top('Топ IP-адресов по маске /24:', data.net24)
+        if nets16:
+            top16 = print_top('Топ IP-адресов по маске /16:', data.net16, limit=top)
+        if nets24:
+            top24 = print_top('Топ IP-адресов по маске /24:', data.net24, limit=top)
         from .whois import whois_hint
         whois_hint()
-    print_detail_block('Детальный разбор (по /16):', top16, data.req16, data.ua16)
-    print_detail_block('Детальный разбор (по /24):', top24, data.req24, data.ua24)
+    if nets16:
+        print_detail_block(f'Детальный разбор (по /16, топ {top}):',
+                           top16, data.req16, data.ua16, compact=not detail_full)
+    if nets24:
+        print_detail_block(f'Детальный разбор (по /24, топ {top}):',
+                           top24, data.req24, data.ua24, compact=not detail_full)
     print_top_ua(data.ua_all)
-    print_scanners(data.net16, data.paths16, top16)
-    print_scanners(data.net24, data.paths24, top24)
+    if nets16:
+        print_scanners(data.net16, data.paths16, top16, full=scanners_full)
+    if nets24:
+        print_scanners(data.net24, data.paths24, top24, full=scanners_full)
     print_anomalies(data)
     attacks = classify_attacks(data)
     print_attack_types(attacks)
@@ -201,9 +233,6 @@ def print_report_503(data, paths, t_from=None, t_to=None, proto='all'):
     print('  ОТЧЁТ ПО АНАЛИЗУ 503 ОШИБОК')
     print('=' * w)
     print()
-    print('Как видно, ваш сайт подвергся атаке сканера,')
-    print('из-за чего вы наблюдали 503 код ответа.')
-    print()
 
     print('--- ОБЩАЯ СТАТИСТИКА ---')
     print()
@@ -215,10 +244,8 @@ def print_report_503(data, paths, t_from=None, t_to=None, proto='all'):
 
     print('--- ХРОНОЛОГИЯ 503 ОШИБОК ---')
     print()
-    print('  503 ошибки были сконцентрированы ввечера:')
-    print()
     for h, c in sorted(chronology.items()):
-        print(f'    {h.strftime("%d/%b/%Y:%H")}    {c:>6} запросов')
+        print(f'    {h.strftime("%d/%b/%Y:%H")}    {c:>6} {plural(c, "запрос", "запроса", "запросов")}')
     print()
 
     if scanner_ip:
@@ -269,10 +296,10 @@ def print_report_503(data, paths, t_from=None, t_to=None, proto='all'):
                     if m:
                         org = m.group(2).strip()
                         break
-                print(f'  {ip:<18} {cnt:>5} запросов  {org}')
+                print(f'  {ip:<18} {cnt:>5} {plural(cnt, "запрос", "запроса", "запросов")}  {org}')
         except Exception:
             for ip, cnt in other_scanners:
-                print(f'  {ip:<18} {cnt:>5} запросов')
+                print(f'  {ip:<18} {cnt:>5} {plural(cnt, "запрос", "запроса", "запросов")}')
         print()
 
     if second_scanner_ip:
@@ -284,7 +311,7 @@ def print_report_503(data, paths, t_from=None, t_to=None, proto='all'):
             print(f'    {cnt:>3}  {p}')
         print()
 
-    print('--- ТОП IP, ПОЛУЧИВШИХ 503 (жертвы) ---')
+    print('--- ТОП IP, ПОЛУЧИВШИХ 503 ---')
     print()
     for ip, cnt in ip_503.most_common(10):
         print(f'    {cnt:>4}  {ip}')
@@ -313,28 +340,42 @@ def print_report_503(data, paths, t_from=None, t_to=None, proto='all'):
         print(f'    {cnt:>4}  {p}')
     print()
 
-    print('--- ПРИЧИНА 503 ---')
+    print('--- ТОП IP, ПОЛУЧИВШИХ 503, И ИХ СОСЕДНИЕ ЗАПРОСЫ ---')
     print()
-    all_scanners = [(scanner_ip, scanner_req)]
-    if other_scanners:
-        all_scanners.extend(other_scanners)
-    for i, (ip, req) in enumerate(all_scanners, 1):
-        print(f'  {i}. Сканер {ip} отправил {req} запросов')
-        print('     к несуществующим PHP-файлам.')
-    print()
-    print('  Сервер не смог обработать такой объём')
-    print('  запросов и начал отвечать 503')
-    print('  Service Unavailable на легитимные запросы.')
+    # индекс: ip -> [(dt, path, status)] по всем распарсенным строкам
+    by_ip = {}
+    for ln in all_lines:
+        rec = parse(ln)
+        if not rec:
+            continue
+        dt = parse_ts(ln)
+        if dt:
+            by_ip.setdefault(rec['ip'], []).append((dt, rec['path'], rec['status']))
+    for lst in by_ip.values():
+        lst.sort(key=lambda x: x[0])
+
+    top_503 = ip_503.most_common(5)
+    for ip, cnt in top_503:
+        print(f'  {ip} — {cnt} {plural(cnt, "ответ", "ответа", "ответов")} 503:')
+        lst = by_ip.get(ip, [])
+        idx503 = [i for i, (_, _, st) in enumerate(lst) if st == '503']
+        # переходные точки: 503, у которых сосед НЕ 503 (вход/выход из полосы 503),
+        # вокруг каждой показываем 2 запроса до и 2 после
+        shown = set()
+        for i in idx503:
+            if (i == 0 or lst[i - 1][2] != '503') or (i == len(lst) - 1 or lst[i + 1][2] != '503'):
+                for j in range(max(0, i - 2), min(len(lst), i + 3)):
+                    shown.add(j)
+        if not shown:  # сплошные 503 без не-503 соседей — показать первый/последний
+            for j in idx503[:2] + idx503[-2:]:
+                shown.add(j)
+        for j in sorted(shown):
+            dt, path, st = lst[j]
+            mark = ' <-- 503' if st == '503' else ''
+            print(f'    [{dt.strftime("%d.%m %H:%M:%S")}] {st} {path[:60]}{mark}')
+        print()
     print()
 
-    print('--- РЕКОМЕНДАЦИИ ---')
-    print()
-    for i, (ip, _) in enumerate(all_scanners, 1):
-        print(f'  {i}. Заблокировать {ip} в файрволе')
-    print(f'  {len(all_scanners) + 1}. Настроить rate limiting на PHP-скрипты')
-    print(f'  {len(all_scanners) + 2}. Установить fail2ban для автоблокировки')
-    print(f'  {len(all_scanners) + 3}. Рассмотреть CloudFlare/DDoS-защиту')
-    print()
     print('=' * w)
     print('  КОНЕЦ ОТЧЁТА')
     print('=' * w)

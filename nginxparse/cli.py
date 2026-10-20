@@ -86,7 +86,15 @@ def main():
     parser.add_argument('--redirects', action='store_true',
                         help='показать цепочки редиректов (301->301->404)')
     parser.add_argument('--report-503', action='store_true',
-                        help='отчёт по 503 ошибкам (причины, сканеры, хронология)')
+                        help='отчёт по 503 ошибкам (хронология, топ IP с их соседними запросами)')
+    parser.add_argument('--16', dest='nets16', action='store_true',
+                        help='включить разбор по /16 (без флагов --16/--24 показываются обе)')
+    parser.add_argument('--24', dest='nets24', action='store_true',
+                        help='включить разбор по /24 (без флагов --16/--24 показываются обе)')
+    parser.add_argument('--top', type=int, metavar='N', default=None,
+                        help='размер топа сетей и детального разбора (по умолчанию 20)')
+    parser.add_argument('--full', action='store_true',
+                        help='полный (некомпактный) детальный разбор и все пути сканеров')
     parser.add_argument('--json', nargs='?', const='report.json', metavar='PATH',
                         help='записать машиночитаемый JSON-отчёт (по умолчанию report.json)')
     args = parser.parse_args()
@@ -154,7 +162,12 @@ def main():
             return
         print('Нет данных.')
         return
-    report(data, whois_limit=args.whois_cidr)
+    # флаги-исключения: только --16 → без /24; только --24 → без /16; оба или ни одного → обе
+    show16 = args.nets16 or not args.nets24
+    show24 = args.nets24 or not args.nets16
+    report(data, whois_limit=args.whois_cidr, top=args.top,
+           nets16=show16, nets24=show24,
+           detail_full=args.full, scanners_full=args.full)
     if args.hourly is not None:
         print_hourly(data.hours, args.hourly)
     if args.per_minute is not None:

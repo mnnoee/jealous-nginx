@@ -21,11 +21,11 @@ def detect_scanners(net_counter, paths_map, top_nets):
     return results
 
 
-def print_scanners(net_counter, paths_map, top_nets):
+def print_scanners(net_counter, paths_map, top_nets, full=False):
     results = detect_scanners(net_counter, paths_map, top_nets)
     print()
     print('=' * 41)
-    print('Выявленные сканнеры:')
+    print('Выявленные сканеры:')
     if not results:
         print('  Не найдено.')
         return
@@ -34,6 +34,11 @@ def print_scanners(net_counter, paths_map, top_nets):
             print(f"{item['network']} <-------------- вероятно, SEO-бот, а не сканер")
         else:
             print(item['network'])
-        for p in item['paths']:
-            print(f'  {p}')
+        if full:
+            for p in item['paths']:
+                print(f'  {p}')
+        else:
+            n = len(item['paths'])
+            print(f'  подозрительных путей: {n}; примеры: ' +
+                  ', '.join(item['paths'][:3]) + (' ...' if n > 3 else ''))
         print()
