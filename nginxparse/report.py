@@ -74,7 +74,7 @@ def print_detail_block(title, top_nets, req_map, ua_map, compact=True):
 
 
 def report(data, whois_limit=None, top=None, nets16=True, nets24=True,
-           detail_full=False, scanners_full=False):
+           detail_full=False, scanners_full=False, scanners_limit=10):
     top = top or TOP_NETWORKS
     total = data.total
     print(f'Всего запросов: {total}, уникальных /16: {len(data.net16)}, /24: {len(data.net24)}')
@@ -102,9 +102,9 @@ def report(data, whois_limit=None, top=None, nets16=True, nets24=True,
                            top24, data.req24, data.ua24, compact=not detail_full)
     print_top_ua(data.ua_all)
     if nets16:
-        print_scanners(data.net16, data.paths16, top16, full=scanners_full)
+        print_scanners(data.net16, data.paths16, top16, full=scanners_full, limit=scanners_limit)
     if nets24:
-        print_scanners(data.net24, data.paths24, top24, full=scanners_full)
+        print_scanners(data.net24, data.paths24, top24, full=scanners_full, limit=scanners_limit)
     print_anomalies(data)
     attacks = classify_attacks(data)
     print_attack_types(attacks)

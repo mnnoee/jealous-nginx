@@ -95,6 +95,8 @@ def main():
                         help='размер топа сетей и детального разбора (по умолчанию 20)')
     parser.add_argument('--full', action='store_true',
                         help='полный (некомпактный) детальный разбор и все пути сканеров')
+    parser.add_argument('--scanners', type=int, metavar='N', default=10,
+                        help='сколько сетей-сканеров показывать (по умолчанию 10, 0 — все)')
     parser.add_argument('--json', nargs='?', const='report.json', metavar='PATH',
                         help='записать машиночитаемый JSON-отчёт (по умолчанию report.json)')
     args = parser.parse_args()
@@ -167,7 +169,7 @@ def main():
     show24 = args.nets24 or not args.nets16
     report(data, whois_limit=args.whois_cidr, top=args.top,
            nets16=show16, nets24=show24,
-           detail_full=args.full, scanners_full=args.full)
+           detail_full=args.full, scanners_full=args.full, scanners_limit=args.scanners)
     if args.hourly is not None:
         print_hourly(data.hours, args.hourly)
     if args.per_minute is not None:
