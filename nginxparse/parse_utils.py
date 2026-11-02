@@ -65,22 +65,20 @@ def _ipaddr(ip):
         return None
 
 
-def mask16(ip):
+def _mask(ip, v4_prefix, v6_prefix):
     a = _ipaddr(ip)
     if a is None:
         return None
-    if isinstance(a, ipaddress.IPv4Address):
-        return str(ipaddress.IPv4Address(int(a) & 0xFFFF0000))
-    return ':'.join(ip.split(':')[:3]) + '::'
+    prefix = v4_prefix if isinstance(a, ipaddress.IPv4Address) else v6_prefix
+    return str(ipaddress.ip_network(f'{a}/{prefix}', strict=False).network_address)
+
+
+def mask16(ip):
+    return _mask(ip, 16, 48)
 
 
 def mask24(ip):
-    a = _ipaddr(ip)
-    if a is None:
-        return None
-    if isinstance(a, ipaddress.IPv4Address):
-        return str(ipaddress.IPv4Address(int(a) & 0xFFFFFF00))
-    return ':'.join(ip.split(':')[:4]) + '::'
+    return _mask(ip, 24, 64)
 
 
 def net_address(ip, pfx):
@@ -181,7 +179,7 @@ def run_whois(ip):
         proc = subprocess.run(['whois', ip], capture_output=True, text=True, timeout=30)
         out = proc.stdout
     except FileNotFoundError:
-        return '[ошибка] whois не установлен (установите: sudo pacman -S whois)'
+        return '[ошибка] whois не установлен'
     except Exception as e:
         return f'[ошибка] {e}'
     if not out.strip():

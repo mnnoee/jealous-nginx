@@ -1,4 +1,4 @@
-"""Оркестратор отчёта: все print_* функции и построение отчёта."""
+"""-"""
 
 import re
 import subprocess
@@ -42,8 +42,8 @@ def print_detail(net, cnt, req, ua, compact=True, top_requests=TOP_REQUESTS, top
             f'{fmt_request(host, path)} ({c})'
             for (_, host, path), c in req.most_common(3)) if req else '-'
         uas = '; '.join(name for name, _ in ua.most_common(2)) if ua else '-'
-        print(f'  {cnt:>6} {net:<16} {reqs}')
-        print(f'{" ":>6} {"":<16} UA: {uas}')
+        print(f'  {cnt:>6} {net:<21} {reqs}')
+        print(f'{" ":>6} {"":<21} UA: {uas}')
         return
     print(f'IP: {net}')
     print(f'Кол-во запросов: {cnt}')
@@ -77,28 +77,31 @@ def report(data, whois_limit=None, top=None, nets16=True, nets24=True,
            detail_full=False, scanners_full=False, scanners_limit=10):
     top = top or TOP_NETWORKS
     total = data.total
-    print(f'Всего запросов: {total}, уникальных /16: {len(data.net16)}, /24: {len(data.net24)}')
+    print(f'Всего запросов: {total}, уникальных сетей: '
+          f'/16 (IPv6 /48): {len(data.net16)}, /24 (IPv6 /64): {len(data.net24)}')
     top16 = top24 = []
     if whois_limit:
         from .whois import print_top_whois
         w = max(len(str(data.net16.most_common(1)[0][1])) if data.net16 else 1,
                 len(str(data.net24.most_common(1)[0][1])) if data.net24 else 1)
         if nets16:
-            top16 = print_top_whois('Топ IP-адресов по маске /16:', data.net16, whois_limit, w, top_limit=top)
+            top16 = print_top_whois('Топ сетей (IPv4 /16, IPv6 /48):',
+                                    data.net16, whois_limit, w, top_limit=top)
         if nets24:
-            top24 = print_top_whois('Топ IP-адресов по маске /24:', data.net24, whois_limit, w, top_limit=top)
+            top24 = print_top_whois('Топ сетей (IPv4 /24, IPv6 /64):',
+                                    data.net24, whois_limit, w, top_limit=top)
     else:
         if nets16:
-            top16 = print_top('Топ IP-адресов по маске /16:', data.net16, limit=top)
+            top16 = print_top('Топ сетей (IPv4 /16, IPv6 /48):', data.net16, limit=top)
         if nets24:
-            top24 = print_top('Топ IP-адресов по маске /24:', data.net24, limit=top)
+            top24 = print_top('Топ сетей (IPv4 /24, IPv6 /64):', data.net24, limit=top)
         from .whois import whois_hint
         whois_hint()
     if nets16:
-        print_detail_block(f'Детальный разбор (по /16, топ {top}):',
+        print_detail_block(f'Детальный разбор (IPv4 /16, IPv6 /48, топ {top}):',
                            top16, data.req16, data.ua16, compact=not detail_full)
     if nets24:
-        print_detail_block(f'Детальный разбор (по /24, топ {top}):',
+        print_detail_block(f'Детальный разбор (IPv4 /24, IPv6 /64, топ {top}):',
                            top24, data.req24, data.ua24, compact=not detail_full)
     print_top_ua(data.ua_all)
     if nets16:
@@ -141,7 +144,6 @@ def print_raw(paths, ip, t_from=None, t_to=None, proto='all', skip403=False):
 
 
 def print_report_503(data, paths, t_from=None, t_to=None, proto='all'):
-    """Красивый отчёт по 503 ошибкам для клиента."""
     all_lines = list(iter_lines(paths))
 
     total = len([ln for ln in all_lines if parse(ln)])
@@ -279,6 +281,7 @@ def print_report_503(data, paths, t_from=None, t_to=None, proto='all'):
     if other_scanners:
         print('--- ДРУГИЕ СКАНЕРЫ ---')
         print()
+        w_ip = max(len(ip) for ip, _ in other_scanners)
         try:
             from .whois import run_whois_raw
             for ip, cnt in other_scanners:
@@ -289,10 +292,10 @@ def print_report_503(data, paths, t_from=None, t_to=None, proto='all'):
                     if m:
                         org = m.group(2).strip()
                         break
-                print(f'  {ip:<18} {cnt:>5} {plural(cnt, "запрос", "запроса", "запросов")}  {org}')
+                print(f'  {ip:<{w_ip}} {cnt:>5} {plural(cnt, "запрос", "запроса", "запросов")}  {org}')
         except Exception:
             for ip, cnt in other_scanners:
-                print(f'  {ip:<18} {cnt:>5} {plural(cnt, "запрос", "запроса", "запросов")}')
+                print(f'  {ip:<{w_ip}} {cnt:>5} {plural(cnt, "запрос", "запроса", "запросов")}')
         print()
 
     if second_scanner_ip:

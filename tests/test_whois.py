@@ -1,6 +1,4 @@
 """Юнит-тесты whois-обогащения (nginxparse/whois.py).
-
-Сеть не нужна: subprocess и кэш замоканы. Только generic-данные.
 """
 
 import tempfile
@@ -17,6 +15,14 @@ inetnum:    203.0.113.0 - 203.0.113.255
 abuse-mailbox: abuse@example-isp.de
 OrgAbuseEmail: abuse@example-isp.de
 e-mail: fallback@example-isp.de
+"""
+
+RIPE_IPV6_TEXT = """
+% Abuse contact for '2001:db8::/32' is 'abuse@example-isp.de'
+
+inet6num:       2001:db8::/32
+netname:        EXAMPLE-NET
+country:        DE
 """
 
 
@@ -61,6 +67,19 @@ class WhoisAbuseTest(unittest.TestCase):
             country, subnets, abuses = W.whois_abuse('203.0.113.7')
         self.assertEqual(country, 'N/A')
         self.assertEqual(abuses, ['N/A'])
+
+    def test_ripe_comment_abuse_contact(self):
+        with patch.object(W, 'run_whois_raw', return_value=RIPE_IPV6_TEXT):
+            country, subnets, abuses = W.whois_abuse('2001:db8::1')
+        self.assertEqual(country, 'DE')
+        self.assertEqual(subnets, '2001:db8::/32')
+        self.assertEqual(abuses, ['abuse@example-isp.de'])
+
+    def test_ripe_comment_deduplicated_with_mailbox(self):
+        text = RIPE_IPV6_TEXT + 'abuse-mailbox: abuse@example-isp.de\n'
+        with patch.object(W, 'run_whois_raw', return_value=text):
+            _, _, abuses = W.whois_abuse('2001:db8::1')
+        self.assertEqual(abuses, ['abuse@example-isp.de'])
 
 
 class CacheTest(unittest.TestCase):

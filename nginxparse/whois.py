@@ -11,6 +11,9 @@ from .parse_utils import net_address, run_whois
 
 ABUSE_KEYS = ('orgabuseemail', 'abuse-mailbox', 'registrar abuse contact email')
 ABUSE_FALLBACK_KEYS = ('e-mail',)
+RIPE_ABUSE_RE = re.compile(
+    r"(?i)^\s*%\s*abuse contact for '[^']*' is '([^']+)'"
+)
 
 CACHE_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.whois_cache.json')
 CACHE_TTL = 7 * 24 * 3600
@@ -83,6 +86,13 @@ def whois_abuse(ip):
     seen = set()
     fallback = []
     for line in out.splitlines():
+        m = RIPE_ABUSE_RE.match(line)
+        if m:
+            val = m.group(1).strip()
+            if val and val not in seen:
+                seen.add(val)
+                abuses.append(val)
+            continue
         m = re.match(r'^\s*([^:]+):\s*(.+)$', line)
         if not m:
             continue
@@ -138,7 +148,7 @@ def print_top_whois(title, counter, whois_limit, w=None, top_limit=None):
         print(f'  [{i}/{len(top)}] {net} ...', file=sys.stderr, end='\r')
         country, subnet, abuses = whois_abuse(net)
         abuse = ', '.join(abuses)
-        print(f'{cnt:>{w}}  {net:<18}  {country:<12}  {abuse:<38}  {subnet}')
+        print(f'{cnt:>{w}}  {net:<21}  {country:<12}  {abuse:<38}  {subnet}')
     print(file=sys.stderr)
     return top
 

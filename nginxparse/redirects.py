@@ -36,4 +36,3 @@ def print_redirects(chains):
             print(f'  [{ts}] GET {path:<35} -> {st}  ({b_str}){heavy}')
         print()
     print(f'Всего цепочек: {len(found)}')
-    print(f'PHP-загрузок от редиректов: ~{len(found) * 3} (x3 на каждый path)')

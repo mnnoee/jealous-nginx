@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [1.2.1] — 2026-11-02
+
+### Changed
+- Подписи в отчёте уточнены: `/16` — это IPv4 `/16` (IPv6 `/48`),
+  `/24` — IPv4 `/24` (IPv6 `/64`).
+
+### Fixed
+- Скорректировано автоопределение подсетей. Маски IPv4 `/16`, `/24`
+  и IPv6 `/48`, `/64`.
+    
 ## [1.2.0] — 2026-10-12
 
 ### Added
@@ -39,14 +49,18 @@
 - Машиночитаемый JSON-отчёт (`--json [PATH]`).
 
 ### Changed
-- Монолит разбит на пакет `nginxparse/` (12 модулей); вывод бит-в-бит
-  идентичен оригиналу. `nginx_log_parser.py` — тонкая обёртка для
-  обратной совместимости.
+- Ранее проект был одним большим монолитным скриптом, который по мере
+  роста становился всё сложнее в поддержке. Он разбит на пакет
+  `nginxparse/` (12 модулей) с сохранением поведения: вывод бит-в-бит
+  идентичен оригиналу. `nginx_log_parser.py` оставлен как тонкая
+  обёртка для обратной совместимости.
 
 ## [1.0.0] и ранее
 
-См. историю git.
+История изменений и git-теги для версий 1.0.0 и более ранних недоступны:
+репозиторий опубликован начиная с 1.2.0. Тег `v1.1.0` также не был
+опубликован.
 
-[Unreleased]: https://github.com/mnnoee/jealous-nginx/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/mnnoee/jealous-nginx/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/mnnoee/jealous-nginx/releases/tag/v1.1.0
+[Unreleased]: https://github.com/mnnoee/jealous-nginx/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/mnnoee/jealous-nginx/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/mnnoee/jealous-nginx/releases/tag/v1.2.0

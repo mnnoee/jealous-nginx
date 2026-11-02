@@ -1,8 +1,4 @@
-"""Юнит-тесты классификации атак (nginxparse/attacks.py).
-
-Только синтетические данные: документированные диапазоны примеров
-(203.0.113.0/24, 198.51.100.0/24) и generic-домены.
-"""
+"""Юнит-тесты классификации атак (nginxparse/attacks.py)."""
 
 import unittest
 from collections import Counter

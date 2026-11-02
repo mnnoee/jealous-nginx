@@ -1,8 +1,4 @@
-"""Юнит-тесты парсинга строк access-лога nginx.
-
-Только синтетические данные (generic-домены, RFC 5737/3849-адреса) —
-никаких реальных клиентских логов.
-"""
+"""Юнит-тесты парсинга строк access-лога nginx."""
 
 import unittest
 
@@ -51,6 +47,31 @@ class MaskTest(unittest.TestCase):
 
     def test_mask24_ipv4(self):
         self.assertEqual(mask24("203.0.113.7"), "203.0.113.0")
+
+    def test_mask16_ipv6_uses_48(self):
+        self.assertEqual(mask16("2001:db8:abcd:12:34:56:78:9a"), "2001:db8:abcd::")
+        self.assertEqual(mask16("2001:db8:abcd::1"), "2001:db8:abcd::")
+
+    def test_mask24_ipv6_uses_64(self):
+        self.assertEqual(mask24("2001:db8:abcd:12:34:56:78:9a"), "2001:db8:abcd:12::")
+        self.assertEqual(mask24("2001:db8:abcd:12::1"), "2001:db8:abcd:12::")
+
+    def test_ipv6_mask_independent_of_text_form(self):
+        self.assertEqual(mask16("2001:db8:0:0:0:0:0:1"), mask16("2001:db8::1"))
+        self.assertEqual(mask24("2001:db8:0:0:0:0:0:1"), mask24("2001:db8::1"))
+
+    def test_ipv6_mask_is_valid_network(self):
+        import ipaddress
+        for ip in ("2001:db8::1", "::1", "::ffff:192.0.2.1",
+                   "2a02:c202:2359:7235::1"):
+            for mask in (mask16(ip), mask24(ip)):
+                self.assertIsNotNone(mask)
+                self.assertNotIn(":::", mask)
+                self.assertIsInstance(ipaddress.ip_address(mask), ipaddress.IPv6Address)
+
+    def test_mask_invalid_returns_none(self):
+        self.assertIsNone(mask16("not-an-ip"))
+        self.assertIsNone(mask24("not-an-ip"))
 
     def test_net_address_slash24(self):
         self.assertEqual(net_address("203.0.113.7", 24), "203.0.113.0")

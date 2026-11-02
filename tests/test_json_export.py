@@ -1,8 +1,4 @@
-"""Юнит-тесты JSON-отчёта (nginxparse/json_export.py).
-
-Полный конвейер на синтетическом логе: analyze() -> build_json().
-Офлайн, только generic-данные.
-"""
+"""Юнит-тесты JSON-отчёта (nginxparse/json_export.py)."""
 
 import json
 import os

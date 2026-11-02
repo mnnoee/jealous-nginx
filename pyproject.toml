@@ -45,15 +45,9 @@ Changelog = "https://github.com/mnnoee/jealous-nginx/blob/master/CHANGELOG.md"
 [project.scripts]
 jealous-nginx = "nginxparse.cli:main"
 
-# Версия берётся из nginxparse.constants.VERSION — единственный источник истины.
-# constants.py читается статически (ast), поэтому версия не требует импорта пакета
-# во время сборки. __init__.py реэкспортирует её как __version__ для пользователей API.
 [tool.setuptools.dynamic]
 version = { attr = "nginxparse.constants.VERSION" }
 
-# Плоский layout (без src/): дашборд Jealous Moon запускает
-# nginx_log_parser.py напрямую из корня репозитория, поэтому пакет
-# обязан лежать рядом с ним.
 [tool.setuptools.packages.find]
 include = ["nginxparse*"]
 
@@ -69,5 +63,4 @@ select = ["E", "F", "W", "I", "UP", "B"]
 ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
-# Тестовые фикстуры — это сырые тексты логов/ответов, верстка там произвольная.
 "tests/*" = ["E501"]
