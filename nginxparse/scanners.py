@@ -1,6 +1,7 @@
 """Детекция сканеров и SEO-ботов."""
 
 from .constants import SCANNER_PATHS_LIMIT, SCANNER_THRESHOLD, SUSPICIOUS_RE
+from .i18n import t
 
 
 def detect_scanners(net_counter, paths_map, top_nets):
@@ -26,17 +27,17 @@ def print_scanners(net_counter, paths_map, top_nets, full=False, limit=10):
     print()
     print('=' * 41)
     if limit and len(results) > limit:
-        print(f'Выявленные сканеры (топ {limit} из {len(results)}, все — с --scanners 0):')
+        print(t('scanners.title_limited', limit=limit, total=len(results)))
     else:
-        print('Выявленные сканеры:')
+        print(t('scanners.title'))
     if not results:
-        print('  Не найдено.')
+        print(t('not_found'))
         return
     if limit:
         results = results[:limit]
     for item in results:
         if item['type'] == 'seo_bot':
-            print(f"{item['network']} <-------------- вероятно, SEO-бот, а не сканер")
+            print(t('scanners.seo_bot', net=item['network']))
         else:
             print(item['network'])
         if full:
@@ -44,6 +45,6 @@ def print_scanners(net_counter, paths_map, top_nets, full=False, limit=10):
                 print(f'  {p}')
         else:
             n = len(item['paths'])
-            print(f'  подозрительных путей: {n}; примеры: ' +
+            print(t('scanners.paths', n=n) +
                   ', '.join(item['paths'][:3]) + (' ...' if n > 3 else ''))
         print()

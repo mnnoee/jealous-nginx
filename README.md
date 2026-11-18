@@ -3,9 +3,9 @@
 [![CI](https://github.com/mnnoee/jealous-nginx/actions/workflows/ci.yml/badge.svg)](https://github.com/mnnoee/jealous-nginx/actions/workflows/ci.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.2.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-green.svg)](CHANGELOG.md)
 
-> Part of the [Jealous Moon](https://github.com/mnnoee) toolkit — offline
+> Part of the [Jealous Moon](https://github.com/mnnoee) toolkit - offline
 > server and domain diagnostics.
 
 Interactive nginx access log parser: traffic analysis by /16 and /24 subnets,
@@ -13,7 +13,7 @@ detailed breakdown per network range, scanner and SEO-bot detection,
 whois enrichment with subnet owner data, time and IP version (IPv4/IPv6)
 filtering.
 
-> [README на русском](README.ru.md) — полная документация.
+> [README на русском](README.ru.md) - полная документация.
 
 ## Features
 
@@ -28,6 +28,8 @@ filtering.
 - whois enrichment: subnet owners, abuse contacts (cached, batch mode)
 - Time range and IP version filtering, redirects, minute/hour stats
 - Human-readable report + machine-readable JSON export
+- Russian and English interface, chosen from the locale (`LC_ALL=C` or
+  `en_*` gives English, `ru_*` gives Russian) or forced with `--lang`
 - Offline: works on log files only (whois enrichment is optional)
 
 ## Install
@@ -57,6 +59,17 @@ jealous-nginx access.log --json out.json  # machine-readable report
 jealous-nginx --help                      # all options
 ```
 
+## Interface language
+
+The output language follows the POSIX locale:
+
+- `LC_ALL=C`, `POSIX`, `C.UTF-8` or any `en_*` locale -> English
+- any `ru_*` locale (`ru_RU.UTF-8`, ...) -> Russian
+- no locale set -> English
+
+The first non-empty variable out of `LC_ALL`, `LC_MESSAGES`, `LANG` and
+`LANGUAGE` wins. Force a language explicitly with `--lang {auto,ru,en}`.
+
 ## Example log
 
 ```log
@@ -70,7 +83,7 @@ IP addresses in examples are documentation ranges (RFC 5737), not real data.
 
 ## Ideas & suggestions
 
-Have an idea for the project? Open an issue — suggestions for new report
+Have an idea for the project? Open an issue - suggestions for new report
 sections, detections, export formats and integrations are welcome.
 
 ## Contributing

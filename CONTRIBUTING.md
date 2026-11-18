@@ -1,42 +1,45 @@
-# Участие в разработке
+# Contributing
 
-## Как предлагать идеи/фичи
+## Proposing ideas and features
 
-Создайте Issue в репозитории с кратким описанием проблемы и желаемого поведения.
+Open an Issue in the repository with a short description of the problem and
+the behaviour you would like to see.
 
-## Как предлагать код
+## Proposing code
 
-Отправьте Pull Request с описанием изменений. До мержа убедитесь, что:
+Send a Pull Request with a description of the changes. Before merging, make
+sure that:
 
 ```bash
-# тесты
+# tests
 python -m pytest
 
-# линтер
+# linter
 ruff check .
 ```
 
-- Код проходит тесты и линтер
-- Описание PR содержит контекст: что было, что стало, зачем
-- `detect_*`/`find_*` функции возвращают структурированные данные,
-  `print_*` только форматируют — новая фича = новая пара функций,
-  а не разрастание существующих файлов
+- The code passes the tests and the linter
+- User-facing strings (output, prompts, help) are added to both catalogs in
+  `nginxparse/i18n.py` (`ru` and `en`) and used in code only via `t()`
+- The PR description provides context: what it was, what it became, and why
+- `detect_*`/`find_*` functions return structured data, `print_*` functions
+  only format it: a new feature means a new pair of functions rather than
+  growing existing files
 
+## Important: access log privacy
 
-## Важно: конфиденциальность access-логов
+Access logs contain real IPs, User-Agents and paths. If a PR or Issue includes
+log samples or report output, you **must** do the following before publishing:
 
-Access-логи содержат реальные IP, User-Agent и пути. Если PR или Issue
-включает примеры логов или вывод отчёта, **обязательно** перед публикацией:
-
-- заменяйте реальные IP на документированные диапазоны примеров
+- replace real IPs with documentation ranges
   (`203.0.113.0/24`, `198.51.100.0/24`, `2001:db8::/32`)
-- заменяйте реальные домены на `example.com` / `example.local`
-- в тестах и фикстурах — только синтетические данные, никаких реальных логов
+- replace real domains with `example.com` / `example.local`
+- use only synthetic data in tests and fixtures, never real logs
 
-## Версионирование и релизы
+## Versioning and releases
 
-- SemVer: `MAJOR.MINOR.PATCH`. Источник истины — `VERSION` в
-  `nginxparse/constants.py`; `pyproject.toml` читает её автоматически,
-  руками версию нигде дублировать не нужно.
-- Каждое изменение — запись в `CHANGELOG.md` (Keep a Changelog).
-- Релиз: обновить `VERSION` -> запись в CHANGELOG -> тег `vX.Y.Z`.
+- SemVer: `MAJOR.MINOR.PATCH`. The source of truth is `VERSION` in
+  `nginxparse/constants.py`; `pyproject.toml` reads it automatically, so the
+  version never needs to be duplicated by hand.
+- Every change gets an entry in `CHANGELOG.md` (Keep a Changelog).
+- Release: update `VERSION` -> add a CHANGELOG entry -> tag `vX.Y.Z`.

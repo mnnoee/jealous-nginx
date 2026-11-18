@@ -2,7 +2,7 @@
 
 import re
 
-VERSION = '1.2.1'
+VERSION = '1.3.0'
 
 TOP_NETWORKS = 20
 TOP_REQUESTS = 10
@@ -20,9 +20,6 @@ SCAN_SHELLS_THRESHOLD = 10
 XMLRPC_THRESHOLD = 50
 REDIRECT_LOOP_THRESHOLD = 10
 
-# Две ветви вместо одной: host (если есть в формате лога) берётся только когда
-# дальше идёт запрос в кавычках, иначе метод уезжал в host, а в path оставался
-# хвост ' HTTP/1.1"'.
 LINE_RE = re.compile(
     r'^(?P<ip>\S+) - \S+ \[[^\]]+\]'
     r'(?:'

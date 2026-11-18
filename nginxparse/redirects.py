@@ -3,6 +3,8 @@
 from datetime import datetime as _dt
 from datetime import timezone
 
+from .i18n import t
+
 REDIRECT_CHAIN = ('301', '301', '404')
 
 
@@ -22,17 +24,17 @@ def print_redirects(chains):
     found = find_redirect_chains(chains)
     print()
     print('=' * 41)
-    print('Цепочки редиректов (301->301->404):')
+    print(t('redirects.title'))
     print('=' * 41)
     if not found:
-        print('  Не найдено.')
+        print(t('not_found'))
         return
     for ip, path, entries in found:
         print(f'--- {ip} -> {path} ---')
         for dt, st, b in entries:
             ts = dt.strftime('%H:%M:%S') if dt else '??:??:??'
             b_str = f'{b} bytes' if b else '-'
-            heavy = '  <- тяжёлый ответ!' if st == '404' and b > 50000 else ''
+            heavy = t('redirects.heavy') if st == '404' and b > 50000 else ''
             print(f'  [{ts}] GET {path:<35} -> {st}  ({b_str}){heavy}')
         print()
-    print(f'Всего цепочек: {len(found)}')
+    print(t('redirects.total', n=len(found)))

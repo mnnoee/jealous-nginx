@@ -9,6 +9,8 @@ import sys
 from datetime import datetime
 
 from .constants import LINE_RE, TIME_FMT, TS_RE, WHOIS_FIELDS
+from .i18n import plural as _plural
+from .i18n import t
 
 
 def iter_lines(paths):
@@ -95,13 +97,7 @@ def fmt_request(host, path):
 
 
 def plural(n, one, few, many):
-    """Русское склонение: plural(1, 'запрос', 'запроса', 'запросов') -> 'запрос'."""
-    n = abs(n)
-    if n % 10 == 1 and n % 100 != 11:
-        return one
-    if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14):
-        return few
-    return many
+    return _plural(n, one, few, many)
 
 
 def in_range(dt, t_from, t_to):
@@ -124,17 +120,16 @@ def parse_dt(s, default_time=None, is_end=False):
     if m:
         date, tm = m.group(1), m.group(2) or default_time or ('23:59:59' if is_end else '00:00:00')
         if re.fullmatch(r'\d{1,2}:\d{2}', tm):
-            tm += ':00'  # HH:MM без секунд — дополняем, формат ниже требует HH:MM:SS
+            tm += ':00'  # HH:MM без секунд - дополняем, формат ниже требует HH:MM:SS
         try:
             dt = datetime.strptime(f'{date} {tm}', '%d.%m.%Y %H:%M:%S')
         except ValueError as err:
-            raise ValueError(f'Некорректная дата: {s!r}. Пример: 19.08.2026 11:11:11') from err
+            raise ValueError(t('date.invalid', s=s)) from err
         return dt.replace(tzinfo=datetime.now().astimezone().tzinfo)
     try:
         return datetime.strptime(s, TIME_FMT)
     except ValueError as err:
-        raise ValueError(f'Некорректная дата: {s!r}. Примеры: '
-                         '19.08.2026 11:11:11 или 19/Aug/2026:11:11:11 +0300') from err
+        raise ValueError(t('date.invalid_examples', s=s)) from err
 
 
 def prompt_dt(prompt, default_time=None, is_end=False):
@@ -153,16 +148,16 @@ def prompt_dt(prompt, default_time=None, is_end=False):
 
 
 def ask_time_range():
-    print('Диапазон времени (можно пропустить, нажав Enter):')
+    print(t('range.title'))
     try:
-        d_from = input('  Дата от (ДД.ММ.ГГГГ): ').strip()
+        d_from = input(t('range.from_date')).strip()
         if not d_from:
             return None, None
-        t_from = input('  Время от (ЧЧ:ММ:СС, Enter = 00:00:00): ').strip() or '00:00:00'
-        d_to = input('  Дата до (ДД.ММ.ГГГГ): ').strip()
+        t_from = input(t('range.from_time')).strip() or '00:00:00'
+        d_to = input(t('range.to_date')).strip()
         if not d_to:
             return None, None
-        t_to = input('  Время до (ЧЧ:ММ:СС, Enter = 23:59:59): ').strip() or '23:59:59'
+        t_to = input(t('range.to_time')).strip() or '23:59:59'
     except (EOFError, KeyboardInterrupt):
         print()
         return None, None
@@ -179,11 +174,11 @@ def run_whois(ip):
         proc = subprocess.run(['whois', ip], capture_output=True, text=True, timeout=30)
         out = proc.stdout
     except FileNotFoundError:
-        return '[ошибка] whois не установлен'
+        return t('whois.not_installed')
     except Exception as e:
-        return f'[ошибка] {e}'
+        return t('whois.error', e=e)
     if not out.strip():
-        return '[пустой ответ]'
+        return t('whois.empty')
     lines = [ln.strip() for ln in out.splitlines() if WHOIS_FIELDS.match(ln)]
     seen = set()
     res = []

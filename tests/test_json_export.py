@@ -100,7 +100,7 @@ class BuildJsonTest(unittest.TestCase):
         self.assertIn('/index.php', st['200']['paths'])
 
     def test_attacks_detected(self):
-        # атаки в JSON — dict: {type, ip, detail, path}
+        # атаки в JSON - dict: {type, ip, detail, path}
         attacks = self.doc['attacks']
         bf = [a for a in attacks if a['type'] == 'BRUTE-FORCE']
         self.assertEqual(len(bf), 1)
@@ -131,7 +131,7 @@ class BuildJsonTest(unittest.TestCase):
 
 class WriteJsonReportTest(unittest.TestCase):
     def test_writes_valid_json(self):
-        # analyze([]) читает stdin — для теста нужен реальный (пустой) файл
+        # analyze([]) читает stdin - для теста нужен реальный (пустой) файл
         with tempfile.TemporaryDirectory() as tmp:
             log = _make_log(tmp, [])
             data = analyze([log])
@@ -159,7 +159,7 @@ class WriteJsonReportTest(unittest.TestCase):
 
 class CliJsonOnGarbageTest(unittest.TestCase):
     def test_json_written_even_when_nothing_parses(self):
-        # error-лог nginx (не access-формат): контракт --json — отчёт пишется
+        # error-лог nginx (не access-формат): контракт --json - отчёт пишется
         # даже когда распарсить нечего (дашборд читает файл всегда)
         from nginxparse import cli as cli_mod
         with tempfile.TemporaryDirectory() as tmp:

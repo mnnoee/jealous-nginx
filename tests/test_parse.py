@@ -5,7 +5,7 @@ import unittest
 from nginxparse.parse_utils import mask16, mask24, net_address, parse, parse_dt, parse_ts
 
 # Формат с доменом: IP - user [date] host "REQUEST" status bytes "referer" "UA" "xff" rt=.. ut=..
-# (host без кавычек — как в реальном логе и как ожидает LINE_RE)
+# (host без кавычек - как в реальном логе и как ожидает LINE_RE)
 LINE_WITH_HOST = (
     '203.0.113.7 - - [19/Aug/2026:11:11:11 +0300] acme.local '
     '"GET /index.php HTTP/1.1" 200 1234 "-" "Mozilla/5.0" "-" rt=0.1 ut=0.2'
@@ -104,7 +104,7 @@ class ParseDtTest(unittest.TestCase):
                          (2026, 8, 19, 11, 11, 11))
 
     def test_datetime_without_seconds(self):
-        # 19.08.2026 11:11 — README документирует, регэкс принимал, strptime падал
+        # 19.08.2026 11:11 - README документирует, регэкс принимал, strptime падал
         dt = parse_dt("19.08.2026 11:11")
         self.assertEqual((dt.year, dt.month, dt.day, dt.hour, dt.minute), (2026, 8, 19, 11, 11))
         self.assertEqual(dt.second, 0)

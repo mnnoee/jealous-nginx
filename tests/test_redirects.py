@@ -36,7 +36,7 @@ class RedirectChainTest(unittest.TestCase):
 
     def test_unsorted_entries_still_detected(self):
         # записи сортируются по времени: 404 стоит в списке первым,
-        # но по таймстампу — последним
+        # но по таймстампу - последним
         chains = {
             ('203.0.113.7', '/a.php'): [
                 (DT + timedelta(seconds=3), '404', 200),

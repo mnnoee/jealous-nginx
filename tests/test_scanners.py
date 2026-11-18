@@ -30,7 +30,7 @@ class ScannerTest(unittest.TestCase):
         self.assertEqual(len(res[0]['paths']), SCANNER_PATHS_LIMIT)
 
     def test_suspicious_patterns(self):
-        # .php, /wp-admin, /.git, /config, .env — подозрительные пути
+        # .php, /wp-admin, /.git, /config, .env - подозрительные пути
         paths = ['/a.php', '/wp-admin/', '/.git/HEAD', '/config', '/.env']
         res = detect_scanners(Counter({NET: 100}), {NET: paths}, TOP)
         self.assertEqual(len(res), 1)

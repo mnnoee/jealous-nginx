@@ -1,5 +1,7 @@
 """Почасовая и поминутная статистика запросов."""
 
+from .i18n import t
+
 
 def print_hourly(hours, last_n=0):
     items = sorted(hours.items())
@@ -7,7 +9,7 @@ def print_hourly(hours, last_n=0):
         items = items[-last_n:]
     print()
     print('=' * 41)
-    print('Запросы по часам (UTC):')
+    print(t('stats.by_hour'))
     print('=' * 41)
     w = len(str(max(hours.values()))) if hours else 1
     for h, c in items:
@@ -20,10 +22,10 @@ def print_per_minute(minutes, last_n=0):
         items = items[-last_n:]
     print()
     print('=' * 41)
-    print('Запросы по минутам (UTC):')
+    print(t('stats.by_minute'))
     print('=' * 41)
     if not items:
-        print('  Нет данных.')
+        print(t('stats.no_data'))
         return
     w = len(str(max(c for _, c in items)))
     vals = []
@@ -37,4 +39,4 @@ def print_per_minute(minutes, last_n=0):
         stdev = statistics.stdev(vals) if len(vals) > 1 else 0
         if mean > 0 and stdev / mean < 0.2:
             print()
-            print(f'Стабильный ритм: {mean:.1f} req/min (откл={stdev:.1f}) — вероятно, автоматизация')
+            print(t('stats.rhythm', mean=mean, stdev=stdev))

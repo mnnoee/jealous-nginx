@@ -7,6 +7,7 @@ import sys
 from . import json_export
 from .constants import DEFAULT_PATH, VERSION
 from .core import analyze
+from .i18n import set_lang, t
 from .parse_utils import ask_time_range, parse_dt
 from .redirects import print_redirects
 from .report import print_raw, print_report_503, report, summarize
@@ -35,16 +36,16 @@ def find_log_files():
 def pick_file():
     found = find_log_files()
     if not found:
-        print('Логи не найдены в текущем каталоге.')
+        print(t('cli.no_logs'))
         return None
-    print(f'Найдено логов: {len(found)}')
-    print('   [ 0] все файлы')
+    print(t('cli.found', n=len(found)))
+    print(f"   [ 0] {t('cli.all_files')}")
     for i, (p, sz) in enumerate(found, 1):
         print(f'   [{i:2}] {p:60} {sz / 1024:8.0f} K')
-    print('   [ q] выход')
+    print(f"   [ q] {t('cli.quit')}")
     while True:
         try:
-            choice = input('Выберите файл: ').strip().lower()
+            choice = input(t('cli.choose')).strip().lower()
         except (EOFError, KeyboardInterrupt):
             print()
             return None
@@ -56,50 +57,63 @@ def pick_file():
             n = int(choice)
             if 1 <= n <= len(found):
                 return [found[n - 1][0]]
-        print('Некорректный ввод.')
+        print(t('cli.bad_input'))
+
+
+def _prescan_lang(argv):
+    for i, arg in enumerate(argv):
+        if arg == '--lang' and i + 1 < len(argv):
+            return argv[i + 1]
+        if arg.startswith('--lang='):
+            return arg.split('=', 1)[1]
+    return None
 
 
 def main():
+    set_lang(_prescan_lang(sys.argv[1:]))
     parser = argparse.ArgumentParser(
-        description='Парсер access-логов nginx (интерактивный)',
+        description=t('cli.desc'),
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--version', action='version',
                         version=f'%(prog)s {VERSION}')
-    parser.add_argument('paths', nargs='*', help='файлы или каталоги с логами (по умолчанию — интерактивный выбор)')
-    parser.add_argument('--from', dest='t_from', metavar='DT', help='начало диапазона времени')
-    parser.add_argument('--to', dest='t_to', metavar='DT', help='конец диапазона времени')
-    parser.add_argument('--summary', action='store_true', help='сводка по каждому access-логу отдельно')
+    parser.add_argument('paths', nargs='*', help=t('cli.paths'))
+    parser.add_argument('--from', dest='t_from', metavar='DT', help=t('cli.from'))
+    parser.add_argument('--to', dest='t_to', metavar='DT', help=t('cli.to'))
+    parser.add_argument('--summary', action='store_true', help=t('cli.summary'))
     parser.add_argument('--hourly', nargs='?', const=0, type=int, metavar='N',
-                        help='запросы по часам (N — последних часов, 0 = все)')
+                        help=t('cli.hourly'))
     parser.add_argument('--whois', nargs='+', metavar='NET',
-                        help='whois для указанных сетей/IP (без анализа логов)')
+                        help=t('cli.whois'))
     parser.add_argument('--whois-cidr', dest='whois_cidr', nargs='?', const=10, type=int,
-                        metavar='N', help='обогатить топы /16 и /24 whois-данными (N сетей)')
+                        metavar='N', help=t('cli.whois_cidr'))
     parser.add_argument('--proto', choices=('all', 'ipv4', 'ipv6'), default='all',
-                        help='фильтр трафика: all | ipv4 | ipv6 (по умолчанию all)')
+                        help=t('cli.proto'))
     parser.add_argument('--403', dest='skip403', action='store_true',
-                        help='исключить запросы с HTTP 403 из статистики')
+                        help=t('cli.skip403'))
     parser.add_argument('--raw', metavar='IP',
-                        help='все строки лога для конкретного IP')
+                        help=t('cli.raw'))
     parser.add_argument('--per-minute', nargs='?', const=0, type=int, metavar='N',
-                        help='запросы по минутам (N — последних минут, 0 = все)')
+                        help=t('cli.per_minute'))
     parser.add_argument('--redirects', action='store_true',
-                        help='показать цепочки редиректов (301->301->404)')
+                        help=t('cli.redirects'))
     parser.add_argument('--report-503', action='store_true',
-                        help='отчёт по 503 ошибкам (хронология, топ IP с их соседними запросами)')
+                        help=t('cli.report_503'))
     parser.add_argument('--16', dest='nets16', action='store_true',
-                        help='включить разбор по /16 (без флагов --16/--24 показываются обе)')
+                        help=t('cli.nets16'))
     parser.add_argument('--24', dest='nets24', action='store_true',
-                        help='включить разбор по /24 (без флагов --16/--24 показываются обе)')
+                        help=t('cli.nets24'))
     parser.add_argument('--top', type=int, metavar='N', default=None,
-                        help='размер топа сетей и детального разбора (по умолчанию 20)')
+                        help=t('cli.top'))
     parser.add_argument('--full', action='store_true',
-                        help='полный (некомпактный) детальный разбор и все пути сканеров')
+                        help=t('cli.full'))
     parser.add_argument('--scanners', type=int, metavar='N', default=10,
-                        help='сколько сетей-сканеров показывать (по умолчанию 10, 0 — все)')
+                        help=t('cli.scanners'))
     parser.add_argument('--json', nargs='?', const='report.json', metavar='PATH',
-                        help='записать машиночитаемый JSON-отчёт (по умолчанию report.json)')
+                        help=t('cli.json'))
+    parser.add_argument('--lang', choices=('auto', 'ru', 'en'), default='auto',
+                        help=t('cli.lang'))
     args = parser.parse_args()
+    set_lang(args.lang)
 
     if args.whois:
         from .whois import run_batch_whois
@@ -123,7 +137,7 @@ def main():
         paths = args.paths or [DEFAULT_PATH]
         data = analyze(paths, t_from, t_to, proto=args.proto, skip403=args.skip403)
         if not data.net16:
-            print('Нет данных.')
+            print(t('data.none'))
             return
         print_redirects(data.chains)
         return
@@ -132,7 +146,7 @@ def main():
         paths = args.paths or [DEFAULT_PATH]
         data = analyze(paths, t_from, t_to, proto=args.proto, skip403=args.skip403)
         if not data.net16:
-            print('Нет данных.')
+            print(t('data.none'))
             return
         print_report_503(data, paths, t_from, t_to, proto=args.proto)
         return
@@ -160,11 +174,11 @@ def main():
         if args.json:
             path = json_export.write_json_report(data, args.json,
                                                  t_from=t_from, t_to=t_to, proto=args.proto)
-            print(f'JSON-отчёт записан в: {path}', file=sys.stderr)
+            print(t('cli.json_written', path=path), file=sys.stderr)
             return
-        print('Нет данных.')
+        print(t('data.none'))
         return
-    # флаги-исключения: только --16 → без /24; только --24 → без /16; оба или ни одного → обе
+    # флаги-исключения: только --16 -> без /24; только --24 -> без /16; оба или ни одного -> обе
     show16 = args.nets16 or not args.nets24
     show24 = args.nets24 or not args.nets16
     report(data, whois_limit=args.whois_cidr, top=args.top,
@@ -178,4 +192,4 @@ def main():
         path = json_export.write_json_report(data, args.json,
                                              t_from=t_from, t_to=t_to, proto=args.proto,
                                              whois_limit=args.whois_cidr)
-        print(f'JSON-отчёт записан в: {path}', file=sys.stderr)
+        print(t('cli.json_written', path=path), file=sys.stderr)

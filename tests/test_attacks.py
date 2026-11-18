@@ -61,7 +61,7 @@ class ScanShellsTest(unittest.TestCase):
         attacks = classify_attacks(data)
         ss = [a for a in attacks if a[0] == 'SCAN-SHELLS']
         self.assertEqual(len(ss), 1)
-        # в detail — общее число запросов, в path — примеры и число путей
+        # в detail - общее число запросов, в path - примеры и число путей
         self.assertIn('путей', ss[0][3])
 
     def test_not_detected_below_threshold(self):

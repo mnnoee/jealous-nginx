@@ -1,6 +1,7 @@
 """Детекция аномальных размеров ответов."""
 
 from .constants import ANOMALY_2XX_MB, ANOMALY_3XX_KB, ANOMALY_4XX_KB
+from .i18n import plural_word, t
 
 
 def detect_anomalies(data):
@@ -22,7 +23,8 @@ def detect_anomalies(data):
         if heavy:
             examples = ', '.join(sorted(paths)[:5])
             if len(paths) > 5:
-                examples += f' ... ({len(paths)} путей)'
+                examples += t('anomalies.more_paths', n=len(paths),
+                              word=plural_word(len(paths), 'path'))
             anomalies.append({'status': status, 'label': label,
                               'count': len(heavy), 'example': examples})
     return anomalies
@@ -33,7 +35,8 @@ def print_anomalies(data):
     if not anomalies:
         return
     print()
-    print('--- АНОМАЛЬНЫЕ ОТВЕТЫ ---')
-    print(f'{"Статус":<8} {"Размер":<12} {"Кол-во":<8} Пример пути')
+    print(t('anomalies.title'))
+    print(f'{t("anomalies.status"):<8} {t("anomalies.size"):<12} '
+          f'{t("anomalies.count"):<8} {t("anomalies.example")}')
     for item in sorted(anomalies, key=lambda x: -x['count']):
         print(f"{item['status']:<8} {item['label']:<12} {item['count']:<8} {item['example']}")

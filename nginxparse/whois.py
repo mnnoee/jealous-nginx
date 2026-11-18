@@ -7,6 +7,7 @@ import re
 import subprocess
 import time
 
+from .i18n import t
 from .parse_utils import net_address, run_whois
 
 ABUSE_KEYS = ('orgabuseemail', 'abuse-mailbox', 'registrar abuse contact email')
@@ -155,10 +156,10 @@ def print_top_whois(title, counter, whois_limit, w=None, top_limit=None):
 
 def whois_hint():
     print()
-    print('Для whois по любой сети/IP: python3 -m nginxparse.whois <сеть>')
-    print('  например: python3 -m nginxparse.whois 45.148.0.0/16')
-    print('  или:      python3 -m nginxparse.whois 45.148.10.0/24 95.108.213.241')
-    print('  также:    python3 nginx_log_parser.py --whois 45.148.0.0/16')
+    print(t('whois.hint_any'))
+    print(t('whois.hint_example'))
+    print(t('whois.hint_multi'))
+    print(t('whois.hint_cli'))
 
 
 def main():
@@ -167,10 +168,10 @@ def main():
     if args:
         run_batch_whois(args)
         return
-    print('Интерактивный whois. Введите сеть/IP (q — выход):')
+    print(t('whois.interactive'))
     while True:
         try:
-            cmd = input('whois> ').strip()
+            cmd = input(t('whois.prompt')).strip()
         except (EOFError, KeyboardInterrupt):
             print()
             break
